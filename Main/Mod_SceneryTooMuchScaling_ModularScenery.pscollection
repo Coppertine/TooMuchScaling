@@ -1,0 +1,51 @@
+<PscollectionRoot count="6" game="Games.PLANET_COASTER_2">
+    <prepared_statements pool_type="4">
+        <preparedstatement arg_count="2">
+            <args pool_type="4">
+                <arg arg_type="2" arg_index="1" />
+                <arg arg_type="2" arg_index="2" />
+            </args>
+            <statement_name pool_type="6">TMSSetSceneryPiecesScale</statement_name>
+            <sql_query pool_type="6">UPDATE SceneryScaling SET MinSize=?1,MaxSize=?2;</sql_query>
+        </preparedstatement>
+        <preparedstatement arg_count="1">
+            <args pool_type="4">
+                <arg arg_type="2" arg_index="1" />
+            </args>
+            <statement_name pool_type="6">TMSSetSceneryPiecesMinScale</statement_name>
+            <sql_query pool_type="6">UPDATE SceneryScaling SET MinSize=?1;</sql_query>
+        </preparedstatement>
+        <preparedstatement arg_count="1">
+            <args pool_type="4">
+                <arg arg_type="2" arg_index="1" />
+            </args>
+            <statement_name pool_type="6">TMSSetSceneryPiecesMaxScale</statement_name>
+            <sql_query pool_type="6">UPDATE SceneryScaling SET MaxSize=?1;</sql_query>
+        </preparedstatement>
+        <preparedstatement arg_count="3">
+            <args pool_type="4">
+                <arg arg_type="3" arg_index="1" />
+                <arg arg_type="2" arg_index="2" />
+                <arg arg_type="2" arg_index="3" />
+            </args>
+            <statement_name pool_type="6">TMSSetSceneryPieceScale</statement_name>
+            <sql_query pool_type="6">UPDATE SceneryScaling SET MinSize=?1,MaxSize=?2 WHERE SceneryPartName=?1;</sql_query>
+        </preparedstatement>
+        <preparedstatement arg_count="2">
+            <args pool_type="4">
+                <arg arg_type="3" arg_index="1" />
+                <arg arg_type="2" arg_index="2" />
+            </args>
+            <statement_name pool_type="6">TMSSetSceneryPieceMinScale</statement_name>
+            <sql_query pool_type="6">UPDATE SceneryScaling SET MinSize=?1 WHERE SceneryPartName=?1;</sql_query>
+        </preparedstatement>
+        <preparedstatement arg_count="2">
+            <args pool_type="4">
+                <arg arg_type="3" arg_index="1" />
+                <arg arg_type="2" arg_index="2" />
+            </args>
+            <statement_name pool_type="6">TMSSetSceneryPieceMaxScale</statement_name>
+            <sql_query pool_type="6">UPDATE SceneryScaling SET MaxSize=?2 WHERE SceneryPartName=?1;</sql_query>
+        </preparedstatement>
+    </prepared_statements>
+</PscollectionRoot>
