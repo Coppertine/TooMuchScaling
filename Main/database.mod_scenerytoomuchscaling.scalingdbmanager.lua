@@ -190,6 +190,28 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 
 	ScalingDBManager._BindPreparedStatements()
 	ScalingDBManager.Global = ScalingDBManager._tConfigDefaults
+	--- TODO: Get a list of all (Scalable) scenery items and their size limits (assume 0.1 -> 5 for any that don't have a limit assigned) and store them in a local table object.
+	--- Make sure said table is NEVER OVERRIDEN (PreBuildPrefabs runs every time you load into and out of a park).
+	--- Then, through some ui stuff, don't know how best to show it. Display to the player if the current scale is doable on vanilla.
+	---
+	---
+	dbgTrace("checking if scalable objects is empty..")
+	dbgTrace(tableplus.tostring(ScalingDBManager._tScalableObjects))
+	if #ScalingDBManager._tScalableObjects <= 0 then
+		dbgTrace("attempting to grab original scale pieces");
+		local _scalableProps = ScalingDBManager._ExecuteQuery("ModularScenery",
+			"Mod_SceneryTooMuchScaling_ModularScenery",
+			"TMSGetAllSceneryScalingPieces")
+		dbgTrace("got props!")
+		for _, x in ipairs(_scalableProps) do
+			--dbgTrace(tostring(i) .. ": " .. tableplus.tostring(x))
+			if #x == 1 then -- doesn't include frontier provided scale values, TMS can't handle this..
+				x[2] = 0.1
+				x[3] = 50 -- even though interally, it's 100, the game treats it as 500%
+			end
+		end
+		ScalingDBManager._tScalableObjects = _scalableProps
+	end
 
 	-- Config read here
 	local bOK_Main, tNTL, tErrorMain = LoadConfig()
