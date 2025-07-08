@@ -1,5 +1,5 @@
 local global = _G
-local api = global.api
+local api = global.api --- @type Api
 local pairs = pairs
 local ipairs = ipairs
 local type = type
