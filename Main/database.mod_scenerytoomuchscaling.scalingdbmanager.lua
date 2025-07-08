@@ -1,5 +1,5 @@
 local global = _G
-local api = global.api ---@type Api
+local api = global.api
 local pairs = pairs
 local ipairs = ipairs
 local type = type
@@ -12,7 +12,6 @@ local GameDatabase = require("Database.GameDatabase")
 local StartScreenHUD = require("StartScreen.Shared.StartScreenHUD")
 local database = api.database
 local coroutine = global.coroutine
----@class ScalingDBManager
 local ScalingDBManager = module(...)
 
 ScalingDBManager._tConfigDefaults = {
@@ -185,11 +184,24 @@ end
 ScalingDBManager.Shutdown = function()
 
 end
+--- Bypasses the current config loading
+ScalingDBManager._IgnoreConfigLoad = false
+
 ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefabs)
 	dbgTrace("ScalingDBManager.PreBuildPrefabs()")
 
 	ScalingDBManager._BindPreparedStatements()
-	ScalingDBManager.Global = ScalingDBManager._tConfigDefaults
+	if not ScalingDBManager._IgnoreConfigLoad then
+		ScalingDBManager.Global = ScalingDBManager._tConfigDefaults
+
+		-- Config read here
+		local bOK_Main, tNTL, tErrorMain = LoadConfig()
+		-- yes, we are doing this again to allow the player to "reload config" without having to close game.
+		MergeConfig(tNTL)
+	else
+		ScalingDBManager._IgnoreConfigLoad = false
+	end
+
 	--- TODO: Get a list of all (Scalable) scenery items and their size limits (assume 0.1 -> 5 for any that don't have a limit assigned) and store them in a local table object.
 	--- Make sure said table is NEVER OVERRIDEN (PreBuildPrefabs runs every time you load into and out of a park).
 	--- Then, through some ui stuff, don't know how best to show it. Display to the player if the current scale is doable on vanilla.
@@ -213,10 +225,6 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 		ScalingDBManager._tScalableObjects = _scalableProps
 	end
 
-	-- Config read here
-	local bOK_Main, tNTL, tErrorMain = LoadConfig()
-	-- yes, we are doing this again to allow the player to "reload config" without having to close game.
-	MergeConfig(tNTL)
 	-- Processing config here.. it's an easy one
 	if ScalingDBManager.Global.tScale then
 		if (ScalingDBManager.Global.tScale.min and ScalingDBManager.Global.tScale.min ~= nil) and (ScalingDBManager.Global.tScale.min and ScalingDBManager.Global.tScale.min ~= nil) then
@@ -230,5 +238,85 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 				GameDatabase.TMSSetSceneryPiecesMaxScale(ScalingDBManager.Global.tScale.max)
 			end
 		end
+	end
+end
+
+local _tTmpConfig = nil -- only really used to check if the current config isn't the same as the park's config
+
+function ScalingDBManager.ReloadParkWithNewScales(_tScale)
+	local parkContext = api.ui2.GetDataStoreContext("park")
+	dbgTrace(tableplus.tostring(parkContext))
+	local _nParkID = api.ui2.GetDataStoreElement(parkContext, "id")
+	dbgTrace(tableplus.tostring(_nParkID))
+	-- TODO: Get the scenario manager and grab the current mode (sandbox or challenge)
+	--StartScreenHUD:_RequestParkLoadFromSaveToken(_nParkID, "Sandbox")
+end
+
+ScalingDBManager.OnWorldSave = function(_tSaver)
+	dbgTrace("ScalingDBManager.OnWorldSave()")
+	_tSaver.tTooMuchScalingConfig = ScalingDBManager.Global
+end
+
+ScalingDBManager.OnWorldLoad = function(_tSaver)
+	dbgTrace("ScalingDBManager.OnWorldLoad()")
+	if _tSaver.tTooMuchScalingConfig ~= nil then
+		dbgTrace(tableplus.tostring(_tSaver.tTooMuchScalingConfig))
+		_tTmpConfig = _tSaver.tTooMuchScalingConfig
+	end
+end
+
+local nDialogID = nil
+
+ScalingDBManager.OnWorldActivation = function()
+	dbgTrace("ScalingDBManager.OnWorldActivation()")
+	if _tTmpConfig == nil then
+		return
+	end
+	dbgTrace("Current Scale: " .. ScalingDBManager.Global.tScale.min .. " - " .. ScalingDBManager.Global.tScale.max)
+	dbgTrace("Park Scale: " .. _tTmpConfig.tScale.min .. " - " .. _tTmpConfig.tScale.max)
+	if ScalingDBManager.Global.tScale.min > _tTmpConfig.tScale.min or ScalingDBManager.Global.tScale.max < _tTmpConfig.tScale.max then
+		dbgTrace("Scaling values are differnet, displaying popup to player.")
+		local dialogStackManager = api.game.GetEnvironment():RequireInterface("Interfaces.IDialogStack")
+		dbgTrace("Grabbed stack manager")
+		local _sLocalScale = tostring(ScalingDBManager.Global.tScale.min * 100) ..
+		    "% -> " .. tostring(ScalingDBManager.Global.tScale.max * 100) .. "%"
+		local _sParkScale = tostring(_tTmpConfig.tScale.min * 100) ..
+		    "% -> " .. tostring(_tTmpConfig.tScale.max * 100) .. "%"
+		local tData = {
+			title = "[STRING_LITERAL:Value=|TooMuchScaling|]",
+			content = "[TMSParkScaleDialog:Local=|" .. _sLocalScale .. "|:Park=|" .. _sParkScale .. "|]",
+			buttons = {
+				{
+					id = "ignore",
+					label = "[Ignore]",
+					inputName = "UI_Cancel"
+				},
+				{
+					id = "use",
+					label = "[TMSUseValues]",
+					inputName = "UI_Select"
+				}
+			}
+		}
+
+		local bDialogInProgress = true
+
+		local OnDialogSelect = function(_inSelf, _sID)
+			dbgTrace("Dialog button clicked!")
+			--	bDialogInProgress = false
+			if _sID == "use" then
+				dbgTrace("Reloading park with new values")
+				--- call a "reload park thing here.."
+				ScalingDBManager.ReloadParkWithNewScales(_tTmpConfig)
+			end
+			dbgTrace("dialog closing")
+			dialogStackManager:HideDialog(nDialogID)
+			nDialogID = nil
+		end
+
+		local nFakeSelf = 2
+		dbgTrace("Attempting to show dialog")
+		nDialogID = dialogStackManager:ShowDialog(1, tData, nFakeSelf, OnDialogSelect)
+		dbgTrace("Showed dialog, waiting...")
 	end
 end
