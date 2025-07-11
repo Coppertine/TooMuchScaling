@@ -12,13 +12,18 @@ local GameDatabase = require("Database.GameDatabase")
 local StartScreenHUD = require("StartScreen.Shared.StartScreenHUD")
 local database = api.database
 local coroutine = global.coroutine
+---@class ScalingDBManager
 local ScalingDBManager = module(...)
 
+
+--- Fallback values
 ScalingDBManager._tConfigDefaults = {
 	tScale = {
 		min = 0.1,
 		max = 6
-	}
+	},
+	bAlwaysScaleTriggeredProps = false,
+	bGridsAreNotGrids = false
 }
 
 local dbgTrace = function(_line)
@@ -163,11 +168,17 @@ ScalingDBManager.tDatabaseFunctions = {
 		return ScalingDBManager._ExecuteQuery("ModularScenery", "Mod_SceneryTooMuchScaling_ModularScenery",
 			"TMSSetSceneryPieceMaxScale", _sPiece, _max)
 	end,
-	--TMSGetAllSceneryScalingPieces = function()
-	--	dbgTrace("ScalingDBManager.TMSGetAllSceneryScalingPieces")
-	--	return {}
+	TMSAddSceneryPieceToSceneryScaling = function(_sPiece, _min, _max)
+		dbgTrace("ScalingDBManager.TMSAddSceneryPieceToSceneryScaling")
+		return ScalingDBManager._ExecuteQuery("ModularScenery", "Mod_SceneryTooMuchScaling_ModularScenery",
+			"TMSAddSceneryPieceToSceneryScaling", _sPiece, _min, _max)
+	end,
+	TMSUpdateSceneryPiecePrefabType = function(_sOldType, _sNewType)
+		dbgTrace("ScalingDBManager.TMSUpdateSceneryPiecePrefabType")
+		return ScalingDBManager._ExecuteQuery("ModularScenery", "Mod_SceneryTooMuchScaling_ModularScenery",
+			"TMSUpdateSceneryPiecePrefabType", _sOldType, _sNewType)
+	end
 
-	--end
 
 }
 
@@ -202,13 +213,19 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 		ScalingDBManager._IgnoreConfigLoad = false
 	end
 
+	---- TODO add config option for these
+	if ScalingDBManager.Global.bAlwaysScaleTriggeredProps ~= nil and ScalingDBManager.Global.bAlwaysScaleTriggeredProps then
+		GameDatabase.TMSUpdateSceneryPiecePrefabType("TriggerableScenery", "TriggerableScalableScenery")
+	end
+	if ScalingDBManager.Global.bGridsAreNotGrids ~= nil and ScalingDBManager.Global.bGridsAreNotGrids then
+		GameDatabase.TMSUpdateSceneryPiecePrefabType("OnGrid", "SurfaceScaling")
+	end
 	--- TODO: Get a list of all (Scalable) scenery items and their size limits (assume 0.1 -> 5 for any that don't have a limit assigned) and store them in a local table object.
 	--- Make sure said table is NEVER OVERRIDEN (PreBuildPrefabs runs every time you load into and out of a park).
 	--- Then, through some ui stuff, don't know how best to show it. Display to the player if the current scale is doable on vanilla.
-	---
-	---
+
 	dbgTrace("checking if scalable objects is empty..")
-	dbgTrace(tableplus.tostring(ScalingDBManager._tScalableObjects))
+	--	dbgTrace(tableplus.tostring(ScalingDBManager._tScalableObjects))
 	if #ScalingDBManager._tScalableObjects <= 0 then
 		dbgTrace("attempting to grab original scale pieces");
 		local _scalableProps = ScalingDBManager._ExecuteQuery("ModularScenery",
@@ -216,10 +233,10 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 			"TMSGetAllSceneryScalingPieces")
 		dbgTrace("got props!")
 		for _, x in ipairs(_scalableProps) do
-			--dbgTrace(tostring(i) .. ": " .. tableplus.tostring(x))
 			if #x == 1 then -- doesn't include frontier provided scale values, TMS can't handle this..
 				x[2] = 0.1
 				x[3] = 50 -- even though interally, it's 100, the game treats it as 500%
+				GameDatabase.TMSAddSceneryPieceToSceneryScaling(x[1], x[2], x[3])
 			end
 		end
 		ScalingDBManager._tScalableObjects = _scalableProps
@@ -241,17 +258,7 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 	end
 end
 
-local _tTmpConfig = nil -- only really used to check if the current config isn't the same as the park's config
-
-function ScalingDBManager.ReloadParkWithNewScales(_tScale)
-	local parkContext = api.ui2.GetDataStoreContext("park")
-	dbgTrace(tableplus.tostring(parkContext))
-	local _nParkID = api.ui2.GetDataStoreElement(parkContext, "id")
-	dbgTrace(tableplus.tostring(_nParkID))
-	-- TODO: Get the scenario manager and grab the current mode (sandbox or challenge)
-	--StartScreenHUD:_RequestParkLoadFromSaveToken(_nParkID, "Sandbox")
-end
-
+ScalingDBManager._tTmpConfig = nil -- only really used to check if the current config isn't the same as the park's config
 ScalingDBManager.OnWorldSave = function(_tSaver)
 	dbgTrace("ScalingDBManager.OnWorldSave()")
 	_tSaver.tTooMuchScalingConfig = ScalingDBManager.Global
@@ -259,64 +266,9 @@ end
 
 ScalingDBManager.OnWorldLoad = function(_tSaver)
 	dbgTrace("ScalingDBManager.OnWorldLoad()")
+	dbgTrace(tableplus.tostring(_tSaver))
 	if _tSaver.tTooMuchScalingConfig ~= nil then
 		dbgTrace(tableplus.tostring(_tSaver.tTooMuchScalingConfig))
-		_tTmpConfig = _tSaver.tTooMuchScalingConfig
-	end
-end
-
-local nDialogID = nil
-
-ScalingDBManager.OnWorldActivation = function()
-	dbgTrace("ScalingDBManager.OnWorldActivation()")
-	if _tTmpConfig == nil then
-		return
-	end
-	dbgTrace("Current Scale: " .. ScalingDBManager.Global.tScale.min .. " - " .. ScalingDBManager.Global.tScale.max)
-	dbgTrace("Park Scale: " .. _tTmpConfig.tScale.min .. " - " .. _tTmpConfig.tScale.max)
-	if ScalingDBManager.Global.tScale.min > _tTmpConfig.tScale.min or ScalingDBManager.Global.tScale.max < _tTmpConfig.tScale.max then
-		dbgTrace("Scaling values are differnet, displaying popup to player.")
-		local dialogStackManager = api.game.GetEnvironment():RequireInterface("Interfaces.IDialogStack")
-		dbgTrace("Grabbed stack manager")
-		local _sLocalScale = tostring(ScalingDBManager.Global.tScale.min * 100) ..
-		    "% -> " .. tostring(ScalingDBManager.Global.tScale.max * 100) .. "%"
-		local _sParkScale = tostring(_tTmpConfig.tScale.min * 100) ..
-		    "% -> " .. tostring(_tTmpConfig.tScale.max * 100) .. "%"
-		local tData = {
-			title = "[STRING_LITERAL:Value=|TooMuchScaling|]",
-			content = "[TMSParkScaleDialog:Local=|" .. _sLocalScale .. "|:Park=|" .. _sParkScale .. "|]",
-			buttons = {
-				{
-					id = "ignore",
-					label = "[Ignore]",
-					inputName = "UI_Cancel"
-				},
-				{
-					id = "use",
-					label = "[TMSUseValues]",
-					inputName = "UI_Select"
-				}
-			}
-		}
-
-		local bDialogInProgress = true
-
-		local OnDialogSelect = function(_inSelf, _sID)
-			dbgTrace("Dialog button clicked!")
-			--	bDialogInProgress = false
-			if _sID == "use" then
-				dbgTrace("Reloading park with new values")
-				--- call a "reload park thing here.."
-				ScalingDBManager.ReloadParkWithNewScales(_tTmpConfig)
-			end
-			dbgTrace("dialog closing")
-			dialogStackManager:HideDialog(nDialogID)
-			nDialogID = nil
-		end
-
-		local nFakeSelf = 2
-		dbgTrace("Attempting to show dialog")
-		nDialogID = dialogStackManager:ShowDialog(1, tData, nFakeSelf, OnDialogSelect)
-		dbgTrace("Showed dialog, waiting...")
+		ScalingDBManager._tTmpConfig = _tSaver.tTooMuchScalingConfig
 	end
 end

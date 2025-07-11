@@ -1,4 +1,4 @@
-<PscollectionRoot count="7" game="Planet Coaster 2">
+<PscollectionRoot count="9" game="Planet Coaster 2">
     <prepared_statements>
         <preparedstatement arg_count="2">
             <args pool_type="4">
@@ -52,5 +52,22 @@
             <statement_name pool_type="6">TMSGetAllSceneryScalingPieces</statement_name>
 	    <sql_query pool_type="6">SELECT ModularSceneryParts.SceneryPartName, SceneryScaling.MinSize, SceneryScaling.MaxSize FROM ModularSceneryParts LEFT JOIN SceneryScaling ON SceneryScaling.SceneryPartName = ModularSceneryParts.SceneryPartName WHERE ModularSceneryParts.DataPrefabName = "SurfaceScaling" OR ModularSceneryParts.DataPrefabName = "TriggerableScalableScenery";</sql_query>
         </preparedstatement>
+	<preparedstatement arg_count="3">
+		<args>
+			<arg arg_type="3" arg_index="1"/>
+			<arg arg_type="2" arg_index="2"/>
+			<arg arg_type="2" arg_index="3"/>
+		</args>
+		<statement_name>TMSAddSceneryPieceToSceneryScaling</statement_name>
+		<sql_query>INSERT OR IGNORE INTO SceneryScaling (SceneryPartName, MinSize, MaxSize) VALUES(?1,?2,?3);</sql_query>
+	</preparedstatement>
+	<preparedstatement arg_count="2">
+		<args>
+			<arg arg_type="3" arg_index="1"/>
+			<arg arg_type="3" arg_index="2"/>
+		</args>
+		<statement_name>TMSUpdateSceneryPiecePrefabType</statement_name>
+		<sql_query>UPDATE ModularSceneryParts SET DataPrefabName=?2 WHERE DataPrefabName=?1;</sql_query>
+	</preparedstatement>
     </prepared_statements>
 </PscollectionRoot>
