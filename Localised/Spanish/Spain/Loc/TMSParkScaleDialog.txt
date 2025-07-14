@@ -1,0 +1,7 @@
+Uno o más de los valores de escala son diferentes a los valores de parque.
+¿Quieres utilizar estos valores en su lugar?
+{LocalScale}
+{ParkScale}
+{Trigger}
+{Grid}
+Nota: Tus valores locales no cambiarán de ninguna manera, sin embargo, guardar  mientras se utilizan los valores locales sobrescribirá dichos valores.
