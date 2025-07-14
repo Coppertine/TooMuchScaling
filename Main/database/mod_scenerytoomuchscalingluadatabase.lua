@@ -35,7 +35,13 @@ end
 
 Mod_SceneryTooMuchScalingLuaDatabase.Init = function()
 	api.debug.Trace("Mod_SceneryTooMuchScalingLuaDatabase.Init()")
+	api.ui2.MapResources("TMSUI")
 end
+
+Mod_SceneryTooMuchScalingLuaDatabase.Shutdown = function()
+	api.ui2.UnmapResources("TMSUI")
+end
+
 
 Mod_SceneryTooMuchScalingLuaDatabase.Activate = function()
 	api.debug.Trace("Mod_SceneryTooMuchScalingLuaDatabase.Activate()")
@@ -80,6 +86,7 @@ end
 Mod_SceneryTooMuchScalingLuaDatabase.tLuaHooks = {
 	["StartScreen.Shared.StartScreenHUD"] = Mod_SceneryTooMuchScalingLuaDatabase._HookStartScreenHUD
 }
+
 
 Mod_SceneryTooMuchScalingLuaDatabase.AddLuaHooks = function(_fnAdd)
 	for key, value in pairs(Mod_SceneryTooMuchScalingLuaDatabase.tLuaHooks) do

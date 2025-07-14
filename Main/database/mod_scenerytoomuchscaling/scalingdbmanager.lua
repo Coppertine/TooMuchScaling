@@ -213,13 +213,7 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 		ScalingDBManager._IgnoreConfigLoad = false
 	end
 
-	---- TODO add config option for these
-	if ScalingDBManager.Global.bAlwaysScaleTriggeredProps ~= nil and ScalingDBManager.Global.bAlwaysScaleTriggeredProps then
-		GameDatabase.TMSUpdateSceneryPiecePrefabType("TriggerableScenery", "TriggerableScalableScenery")
-	end
-	if ScalingDBManager.Global.bGridsAreNotGrids ~= nil and ScalingDBManager.Global.bGridsAreNotGrids then
-		GameDatabase.TMSUpdateSceneryPiecePrefabType("OnGrid", "SurfaceScaling")
-	end
+
 	--- TODO: Get a list of all (Scalable) scenery items and their size limits (assume 0.1 -> 5 for any that don't have a limit assigned) and store them in a local table object.
 	--- Make sure said table is NEVER OVERRIDEN (PreBuildPrefabs runs every time you load into and out of a park).
 	--- Then, through some ui stuff, don't know how best to show it. Display to the player if the current scale is doable on vanilla.
@@ -240,6 +234,13 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 			end
 		end
 		ScalingDBManager._tScalableObjects = _scalableProps
+	end
+
+	if ScalingDBManager.Global.bAlwaysScaleTriggeredProps ~= nil and ScalingDBManager.Global.bAlwaysScaleTriggeredProps then
+		GameDatabase.TMSUpdateSceneryPiecePrefabType("TriggerableScenery", "TriggerableScalableScenery")
+	end
+	if ScalingDBManager.Global.bGridsAreNotGrids ~= nil and ScalingDBManager.Global.bGridsAreNotGrids then
+		GameDatabase.TMSUpdateSceneryPiecePrefabType("OnGrid", "SurfaceScaling")
 	end
 
 	-- Processing config here.. it's an easy one

@@ -6,7 +6,7 @@ local VersionControlHUD = require("StartScreen.Shared.VersionControlHUD")
 local Mutators = require("Environment.ModuleMutators")
 local tostring = global.tostring
 local table = require("Common.tableplus")
-local FlexPanelIMGUIWrapper = require("Helpers.FlexPanelImGuiWrapper")
+local OriginalScaleOverlay = require("UI.OriginalScaleOverlay")
 local TMSLuaDatabase = require("Database.Mod_SceneryTooMuchScalingLuaDatabase")
 ---@class ScalingParkManager
 local ScalingParkManager = module(..., Mutators.Manager())
@@ -39,10 +39,21 @@ function ScalingParkManager.ReloadParkWithNewScales(self, _tScale)
 	parkLoadSaveManager:LoadParkFromSaveToken(tParkData.token)
 end
 
-local nDialogID = nil
-
-function ScalingParkManager.Activate()
+function ScalingParkManager.Activate(self)
 	dbgTrace("ScalingParkManager.Activate()")
+	dbgTrace("Attempting to show overlay")
+	---- Here for UI overlay intialisation
+	self.ui = OriginalScaleOverlay:new(function()
+		api.debug.Trace("Mod_SceneryTooMuchScaling.ScalingPakManager:OriginalScaleOverlay is ready")
+		if self.ui then
+			--self.ui:Show()
+			--if self.InEditor then
+			--	self.ui:Show()
+			--else
+			--	self.ui:Hide()
+			--end
+		end
+	end)
 
 	local _tTmpConfig = ScalingDBManager._tTmpConfig
 	if _tTmpConfig == nil then
@@ -60,6 +71,7 @@ function ScalingParkManager.Activate()
 	local _bGridDifferent = _tTmpConfig.bGridsAreNotGrids == true and
 	    ScalingDBManager.Global.bGridsAreNotGrids == false
 
+
 	if _bScaleDifferent or _bGridDifferent or _bTriggerDiffernet then
 		dbgTrace("Scaling values are differnet, displaying popup to player.")
 		local dialogStackManager = api.game.GetEnvironment():RequireInterface("Interfaces.IDialogStack")
@@ -68,7 +80,6 @@ function ScalingParkManager.Activate()
 		local _sParkScale = ""
 		local _sGridEnabled = ""
 		local _sTriggerEnabled = ""
-		local _sMissingValues = ""
 		if _bScaleDifferent then
 			_sLocalScale = "Local Scale: " ..
 			    tostring(ScalingDBManager.Global.tScale.min * 100) ..
@@ -76,17 +87,13 @@ function ScalingParkManager.Activate()
 			_sParkScale = "Park Scale:" ..
 			    tostring(_tTmpConfig.tScale.min * 100) ..
 			    "% -> " .. tostring(_tTmpConfig.tScale.max * 100) .. "%"
-			_sMissingValues = _sLocalScale .. "<br/>" .. _sParkScale
 		end
-		dbgTrace(_sMissingValues)
 		if _bGridDifferent then
 			_sGridEnabled = api.loc.GetLocalisedText("TMSGridNotEnabled")
 		end
-		dbgTrace(_sMissingValues)
 		if _bTriggerDiffernet then
 			_sTriggerEnabled = api.loc.GetLocalisedText("TMSTriggerNotEnabled")
 		end
-		dbgTrace(_sMissingValues)
 		local tData = {
 			title = "[STRING_LITERAL:Value=|TooMuchScaling|]",
 			content = "[TMSParkScaleDialog:LocalScale=|" ..
@@ -124,7 +131,6 @@ function ScalingParkManager.Activate()
 		local nFakeSelf = 2
 		dbgTrace("Attempting to show dialog")
 		nDialogID = dialogStackManager:ShowDialog(1, tData, nFakeSelf, OnDialogSelect)
-		dbgTrace("Showed dialog, waiting...")
 	end
 end
 
