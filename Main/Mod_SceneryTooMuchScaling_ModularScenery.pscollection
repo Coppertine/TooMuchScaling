@@ -1,4 +1,4 @@
-<PscollectionRoot count="9" game="Planet Coaster 2">
+<PscollectionRoot count="10" game="Planet Coaster 2">
     <prepared_statements>
         <preparedstatement arg_count="2">
             <args pool_type="4">
@@ -69,5 +69,12 @@
 		<statement_name>TMSUpdateSceneryPiecePrefabType</statement_name>
 		<sql_query>UPDATE ModularSceneryParts SET DataPrefabName=?2 WHERE DataPrefabName=?1;</sql_query>
 	</preparedstatement>
+	<preparedstatement arg_count="1">
+		<args>
+		    <arg arg_type="3" arg_index="1"/>
+		</args>
+            <statement_name pool_type="6">TMSGetAllSceneryPiecesByPrefabType</statement_name>
+	    <sql_query pool_type="6">SELECT * FROM ModularSceneryParts WHERE DataPrefabName = ?1;</sql_query>
+        </preparedstatement>
     </prepared_statements>
 </PscollectionRoot>
