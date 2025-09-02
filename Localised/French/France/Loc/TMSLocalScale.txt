@@ -1,0 +1,1 @@
+Échelle locale: {value}

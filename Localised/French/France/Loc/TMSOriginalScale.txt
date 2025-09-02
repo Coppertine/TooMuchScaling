@@ -1,0 +1,1 @@
+Échelle originale : {MinScale:float:decimalPlaces=0}% - {MaxScale:float:decimalPlaces=0}%
