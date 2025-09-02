@@ -26,15 +26,7 @@ let _maxScale = 50;
 Engine.whenReady.then(async () => {
     await loadCSS('project/Shared');
     await loadDebugDefaultTools();
-  //  _minScale = DataStore.getValue(["toomuchscaling"], "minscale");
-    DataStore.getPropertyListener(["toomuchscaling"], "minscale", (value) => {
-      _minScale = value;
-    });
-//   _maxScale = DataStore.getValue(["toomuchscaling"], "maxscale");
-    DataStore.getPropertyListener(["toomuchscaling"], "maxscale", (value) => {
-      _maxScale = value;
-    });
- 
+   
     preact.render(preact.h(TMSOverlay, null), document.body);
     Engine.sendEvent('OnReady');
 }).catch(Engine.defaultCatch);
@@ -43,7 +35,7 @@ class TMSOverlay extends preact.Component {
         moduleName: 'TMSUI',
     };
     state = {
-        visible: true,
+        visible: false,
 	minScale: 0.1,
 	maxScale: 50
     };
@@ -56,16 +48,22 @@ class TMSOverlay extends preact.Component {
         Engine.removeListener('Hide', this.onHide);
     }
     render(props, state) {
+
+	if(!this.state.visible)
+	{
+            return preact.h("div", {className:'TMSUI_root'});
+	}
         return (preact.h("div", {className:'TMSUI_root'},
             preact.h("div", { className: 'TMSUI_overlay' },
-                preact.h("span", null, translate(`[TMSOriginalScale:MinScale=|${_minScale * 100}|:MaxScale=|${_maxScale * 100}|]`)),
+                preact.h("span", null, translate(`[TMSOriginalScale:MinScale=|${state.minScale * 100}|:MaxScale=|${state.maxScale * 100}|]`)),
                // preact.h("span", null, translate(`[TMSOriginalScale:MinScale=|1|:MaxScale=|500|]`)),
             )
         ))
     }
 
-    onShow = () => {
-        this.setState({ visible: true });
+    onShow = (data) => {
+	let {minscale, maxscale} = data;
+        this.setState({ visible: true, minScale: minscale, maxScale: maxscale });
     };
     onHide = () => {
         this.setState({ visible: false });
