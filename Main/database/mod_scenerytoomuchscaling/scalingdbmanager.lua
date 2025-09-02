@@ -120,7 +120,9 @@ ScalingDBManager._ExecuteQuery = function(_sDatabase, _sPSCollection, _sInstance
 		if #tArgs > 0 then
 			for i, j in ipairs(tArgs) do
 				dbgTrace("binding parameter: " .. j)
-				database.BindParameter(cPSInstance, i, j)
+				if j ~= nil then
+					database.BindParameter(cPSInstance, i, j)
+				end
 			end
 		end
 		database.BindComplete(cPSInstance)
@@ -177,6 +179,19 @@ ScalingDBManager.tDatabaseFunctions = {
 		dbgTrace("ScalingDBManager.TMSUpdateSceneryPiecePrefabType")
 		return ScalingDBManager._ExecuteQuery("ModularScenery", "Mod_SceneryTooMuchScaling_ModularScenery",
 			"TMSUpdateSceneryPiecePrefabType", _sOldType, _sNewType)
+	end,
+	TMSGetAllSceneryPiecesByPrefabType = function(_sPrefabType)
+		dbgTrace("TMSGetAllSceneryPiecesByPrefabType")
+		return ScalingDBManager._ExecuteQuery("ModularScenery", "Mod_SceneryTooMuchScaling_ModularScenery",
+			"TMSGetAllSceneryPiecesByPrefabType", _sPrefabType)
+	end,
+	-- Totally didn't steal this from ForgeUtils...
+	TMSAddModularSceneryPart = function(SceneryPartName, PrefabName, DataPrefabName, ContentPack, UGCID, BoxXSize,
+					    BoxYSize, BoxZSize)
+		dbgTrace("TMSAddModularSceneryPart")
+		return ScalingDBManager._ExecuteQuery("ModularScenery", "Mod_SceneryTooMuchScaling_ModularScenery",
+			"TMSAddModularSceneryPart", SceneryPartName, PrefabName, DataPrefabName, ContentPack, UGCID,
+			BoxXSize, BoxYSize, BoxZSize)
 	end
 
 
@@ -213,11 +228,6 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 		ScalingDBManager._IgnoreConfigLoad = false
 	end
 
-
-	--- TODO: Get a list of all (Scalable) scenery items and their size limits (assume 0.1 -> 5 for any that don't have a limit assigned) and store them in a local table object.
-	--- Make sure said table is NEVER OVERRIDEN (PreBuildPrefabs runs every time you load into and out of a park).
-	--- Then, through some ui stuff, don't know how best to show it. Display to the player if the current scale is doable on vanilla.
-
 	dbgTrace("checking if scalable objects is empty..")
 	--	dbgTrace(tableplus.tostring(ScalingDBManager._tScalableObjects))
 	if #ScalingDBManager._tScalableObjects <= 0 then
@@ -239,8 +249,25 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
 	if ScalingDBManager.Global.bAlwaysScaleTriggeredProps ~= nil and ScalingDBManager.Global.bAlwaysScaleTriggeredProps then
 		GameDatabase.TMSUpdateSceneryPiecePrefabType("TriggerableScenery", "TriggerableScalableScenery")
 	end
+
+	--- TODO: Add button / gui thing to switch between grid and non-grid.
+
 	if ScalingDBManager.Global.bGridsAreNotGrids ~= nil and ScalingDBManager.Global.bGridsAreNotGrids then
-		GameDatabase.TMSUpdateSceneryPiecePrefabType("OnGrid", "SurfaceScaling")
+		--GameDatabase.TMSUpdateSceneryPiecePrefabType("OnGrid", "SurfaceScaling")
+		local _onGridItems = GameDatabase.TMSGetAllSceneryPiecesByPrefabType("OnGrid")
+		--dbgTrace(tableplus.tostring(_onGridItems))
+		local SCENERY_PREFAB_TYPE_COLUMN = 3
+		local SCENERY_PREFAB_NAME_COLUMN = 1
+		for _, _tGridProp in ipairs(_onGridItems) do
+			dbgTrace(tableplus.tostring(_tGridProp))
+			_tGridProp[SCENERY_PREFAB_TYPE_COLUMN] = "SurfaceScaling"
+			--	_tGridProp[SCENERY_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN] +
+			--	    "_SurfaceScaling"
+			dbgTrace("Saving modified 'grid' prop")
+			dbgTrace(tableplus.tostring(_tGridProp))
+			GameDatabase.TMSAddModularSceneryPart(_tGridProp[1], _tGridProp[2], _tGridProp[3], _tGridProp[4],
+				_tGridProp[5], _tGridProp[6], _tGridProp[7], _tGridProp[8])
+		end
 	end
 
 	-- Processing config here.. it's an easy one

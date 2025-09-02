@@ -1,0 +1,3 @@
+De instelling `bGridsAreNotGrids` vereist ForgeUtils 1.0+.
+
+bGridsAreNotGrids zal worden uitgeschakeld voor de huidige sessie.

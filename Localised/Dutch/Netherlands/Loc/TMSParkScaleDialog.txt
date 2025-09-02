@@ -1,0 +1,7 @@
+Één of meerdere schaalwaarden verschillen van de schaalwaarden van het park. 
+Hebben deze nieuwe waarden de voorkeur?
+{LocalScale}
+{ParkScale}
+{Trigger}
+{Grid}
+Let op: De lokale waarden worden niet aangepast. Opslaan terwijl de lokale waarden worden gebruikt, overschrijft deze waarden echter.
