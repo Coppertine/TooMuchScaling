@@ -25,7 +25,6 @@ ScalingDBManager._tConfigDefaults = {
         max = 6
     },
     bAlwaysScaleTriggeredProps = false,
-    bGridsAreNotGrids = false
 }
 
 local dbgTrace = function(_line)
@@ -268,7 +267,7 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
         for _, x in ipairs(_scalableProps) do
             if #x == 1 then -- doesn't include frontier provided scale values, TMS can't handle this..
                 x[2] = 0.1
-                x[3] = 5    -- even though interally, it's 100, the game treats it as 500%
+                x[3] = 5    -- even though interally, it's 1000, the game treats it as 500%
                 GameDatabase.TMSAddSceneryPieceToSceneryScaling(x[1], x[2], x[3])
             end
         end
@@ -302,80 +301,83 @@ function ScalingDBManager.InsertToDBs()
     ScalingDBManager._BindPreparedStatements()
     --- TODO: Add button / gui thing to switch between grid and non-grid.
     --- This currently would make a duplicate prop as a non-grid
-    if ScalingDBManager.Global.bGridsAreNotGrids ~= nil and ScalingDBManager.Global.bGridsAreNotGrids then
-        --GameDatabase.TMSUpdateSceneryPiecePrefabType("OnGrid", "SurfaceScaling")
-        local _onGridItems = GameDatabase.TMSGetAllSceneryPiecesByPrefabType("OnGrid")
-        --dbgTrace(tableplus.tostring(_onGridItems))
-        local SURFACESCALING_SUFFIX = "_SurfaceScaling"
-        local SCENERY_PREFAB_TYPE_COLUMN = 3
-        local PROPUI_ICON_COLUMN = 4
-        local SCENERY_PREFAB_COLUMN = 2
-        local SCENERY_PREFAB_NAME_COLUMN = 1
-        local SIMULATION_PREFAB_NAME_COLUMN = 1
-        local PROPUI_PREFAB_NAME_COLUMN = 1
-        local THEMING_PREFAB_NAME_COLUMN = 1
-        for _, _tGridProp in ipairs(_onGridItems) do
-            local _tPropUIData = ScalingDBManager._ExecuteQuery("ModularScenery",
-                "Mod_SceneryTooMuchScaling_ModularScenery",
-                "TMSGetSceneryUIDataOfPart", _tGridProp[SCENERY_PREFAB_NAME_COLUMN])[1]
-            local _tPropSimulationData = ScalingDBManager._ExecuteQuery("ModularScenery",
-                "Mod_SceneryTooMuchScaling_ModularScenery", "TMSGetScenerySimulationData",
-                _tGridProp[SCENERY_PREFAB_NAME_COLUMN])[1]
-            local _tPropTheming = ScalingDBManager._ExecuteQuery("ModularScenery",
-                "Mod_SceneryTooMuchScaling_ModularScenery", "TMSGetSceneryThemingData",
-                _tGridProp[SCENERY_PREFAB_NAME_COLUMN])
-            local _tMetadataTags = ScalingDBManager._ExecuteQuery("ModularScenery",
-                "Mod_SceneryTooMuchScaling_ModularScenery", "TMSGetSceneryMetadataTags",
-                _tGridProp[SCENERY_PREFAB_NAME_COLUMN])
-            dbgTrace(_tGridProp[SCENERY_PREFAB_NAME_COLUMN])
-
-            ---- Modular Scenery Part
-            _tGridProp[SCENERY_PREFAB_TYPE_COLUMN] = "SurfaceScaling"
-            -- here to ensure the
-            _tGridProp[SCENERY_PREFAB_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
-
-            _tGridProp[SCENERY_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN] ..
-                SURFACESCALING_SUFFIX
-            GameDatabase.TMSAddModularSceneryPart(_tGridProp[1], _tGridProp[2], _tGridProp[3], _tGridProp[4],
-                _tGridProp[5], _tGridProp[6], _tGridProp[7], _tGridProp[8])
-
-            dbgTrace("Adding simulation stuff..")
-            ---- Simulation
-            _tPropSimulationData[SIMULATION_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
-            GameDatabase.TMSAddScenerySimulationData(_tPropSimulationData[1], _tPropSimulationData[2],
-                _tPropSimulationData[3], _tPropSimulationData[4], _tPropSimulationData[5])
-
-            ---- Theming
-            if _tPropTheming ~= nil and #_tPropTheming > 0 then
-                -- dbgTrace(tableplus.tostring(_tPropTheming))
-                _tPropTheming = _tPropTheming[1]
-                _tPropTheming[THEMING_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
-                --dbgTrace(tableplus.tostring(_tPropTheming))
-                GameDatabase.TMSAddSceneryThemingData(_tPropTheming[1], _tPropTheming[2], _tPropTheming[3],
-                    _tPropTheming[4])
-            end
-            ---- UI Data
-
-            ---- TODO: Change this out for swappable ui
-            dbgTrace("Adding ui item")
-            if _tPropUIData ~= nil then
-                _tPropUIData[PROPUI_ICON_COLUMN] = _tPropUIData[PROPUI_PREFAB_NAME_COLUMN]
-                _tPropUIData[PROPUI_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
-                --  dbgTrace(tableplus.tostring(_tPropUIData))
-                GameDatabase.TMSAddSceneryUIData(_tPropUIData[1], _tPropUIData[2], _tPropUIData[3], _tPropUIData[4],
-                    _tPropUIData[5])
-            end
-            --           dbgTrace(tableplus.tostring(_tMetadataTags))
-            for _, _tTag in ipairs(_tMetadataTags) do
-                if _tTag[2] == "Filter_GridProperty_Grid" then
-                    _tTag[2] = "Filter_GridProperty_OffGrid"
-                end
-
-                _tTag[1] = _tTag[1] .. SURFACESCALING_SUFFIX
-                GameDatabase.TMSAddSceneryTag(_tTag[1], _tTag[2])
-            end
-        end
-    end
+    ----- WARNING: This has been commented out due to Update 1.7 featuring rotatable and "scalable" buildings.
+    ---- If you want to use this, please uncomment the entire section below
+    --
+    --  if ScalingDBManager.Global.bGridsAreNotGrids ~= nil and ScalingDBManager.Global.bGridsAreNotGrids then
+    --      --GameDatabase.TMSUpdateSceneryPiecePrefabType("OnGrid", "SurfaceScaling")
+    --      local _onGridItems = GameDatabase.TMSGetAllSceneryPiecesByPrefabType("OnGrid")
+    --      --dbgTrace(tableplus.tostring(_onGridItems))
+    --      local SURFACESCALING_SUFFIX = "_SurfaceScaling"
+    --      local SCENERY_PREFAB_TYPE_COLUMN = 3
+    --      local PROPUI_ICON_COLUMN = 4
+    --      local SCENERY_PREFAB_COLUMN = 2
+    --      local SCENERY_PREFAB_NAME_COLUMN = 1
+    --      local SIMULATION_PREFAB_NAME_COLUMN = 1
+    --      local PROPUI_PREFAB_NAME_COLUMN = 1
+    --      local THEMING_PREFAB_NAME_COLUMN = 1
+    --      for _, _tGridProp in ipairs(_onGridItems) do
+    --          local _tPropUIData = ScalingDBManager._ExecuteQuery("ModularScenery",
+    --              "Mod_SceneryTooMuchScaling_ModularScenery",
+    --              "TMSGetSceneryUIDataOfPart", _tGridProp[SCENERY_PREFAB_NAME_COLUMN])[1]
+    --          local _tPropSimulationData = ScalingDBManager._ExecuteQuery("ModularScenery",
+    --              "Mod_SceneryTooMuchScaling_ModularScenery", "TMSGetScenerySimulationData",
+    --              _tGridProp[SCENERY_PREFAB_NAME_COLUMN])[1]
+    --          local _tPropTheming = ScalingDBManager._ExecuteQuery("ModularScenery",
+    --              "Mod_SceneryTooMuchScaling_ModularScenery", "TMSGetSceneryThemingData",
+    --              _tGridProp[SCENERY_PREFAB_NAME_COLUMN])
+    --          local _tMetadataTags = ScalingDBManager._ExecuteQuery("ModularScenery",
+    --              "Mod_SceneryTooMuchScaling_ModularScenery", "TMSGetSceneryMetadataTags",
+    --              _tGridProp[SCENERY_PREFAB_NAME_COLUMN])
+    --          dbgTrace(_tGridProp[SCENERY_PREFAB_NAME_COLUMN])
+    --
+    --          ---- Modular Scenery Part
+    --          _tGridProp[SCENERY_PREFAB_TYPE_COLUMN] = "SurfaceScaling"
+    --          -- here to ensure the
+    --          _tGridProp[SCENERY_PREFAB_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
+    --
+    --          _tGridProp[SCENERY_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN] ..
+    --              SURFACESCALING_SUFFIX
+    --          GameDatabase.TMSAddModularSceneryPart(_tGridProp[1], _tGridProp[2], _tGridProp[3], _tGridProp[4],
+    --              _tGridProp[5], _tGridProp[6], _tGridProp[7], _tGridProp[8])
+    --
+    --          dbgTrace("Adding simulation stuff..")
+    --          ---- Simulation
+    --          _tPropSimulationData[SIMULATION_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
+    --          GameDatabase.TMSAddScenerySimulationData(_tPropSimulationData[1], _tPropSimulationData[2],
+    --              _tPropSimulationData[3], _tPropSimulationData[4], _tPropSimulationData[5])
+    --
+    --          ---- Theming
+    --          if _tPropTheming ~= nil and #_tPropTheming > 0 then
+    --              -- dbgTrace(tableplus.tostring(_tPropTheming))
+    --              _tPropTheming = _tPropTheming[1]
+    --              _tPropTheming[THEMING_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
+    --              --dbgTrace(tableplus.tostring(_tPropTheming))
+    --              GameDatabase.TMSAddSceneryThemingData(_tPropTheming[1], _tPropTheming[2], _tPropTheming[3],
+    --                  _tPropTheming[4])
+    --          end
+    --          ---- UI Data
+    --
+    --          ---- TODO: Change this out for swappable ui
+    --          dbgTrace("Adding ui item")
+    --          if _tPropUIData ~= nil then
+    --              _tPropUIData[PROPUI_ICON_COLUMN] = _tPropUIData[PROPUI_PREFAB_NAME_COLUMN]
+    --              _tPropUIData[PROPUI_PREFAB_NAME_COLUMN] = _tGridProp[SCENERY_PREFAB_NAME_COLUMN]
+    --              --  dbgTrace(tableplus.tostring(_tPropUIData))
+    --              GameDatabase.TMSAddSceneryUIData(_tPropUIData[1], _tPropUIData[2], _tPropUIData[3], _tPropUIData[4],
+    --                  _tPropUIData[5])
+    --          end
+    --          --           dbgTrace(tableplus.tostring(_tMetadataTags))
+    --          for _, _tTag in ipairs(_tMetadataTags) do
+    --              if _tTag[2] == "Filter_GridProperty_Grid" then
+    --                  _tTag[2] = "Filter_GridProperty_OffGrid"
+    --              end
+    --
+    --              _tTag[1] = _tTag[1] .. SURFACESCALING_SUFFIX
+    --              GameDatabase.TMSAddSceneryTag(_tTag[1], _tTag[2])
+    --          end
+    --      end
+    --  end
 end
 
 ScalingDBManager._tTmpConfig = nil -- only really used to check if the current config isn't the same as the park's config

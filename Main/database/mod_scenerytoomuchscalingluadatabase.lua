@@ -19,7 +19,7 @@ local MOD_INFO = {
     description = "Expands the range of scalable objects to an extreme degree.",
     optional_mods = {
         { mod = "Mod_ModMenu", min_version = 1.0 },
-        { mod = "ForgeUtils",  min_version = 1.0 }
+        --       { mod = "ForgeUtils",  min_version = 1.0 }
     },
     incompatable_mods = {
         "ACSEDebug"
@@ -58,13 +58,13 @@ Mod_SceneryTooMuchScalingLuaDatabase.Setup = function()
         api.debug.Trace(table.tostring(MOD_INFO))
         modmenu.RegisterMod(MOD_INFO)
     end
-    api.debug.Trace("checking if forgeUtils exists")
-    --api.debug.Trace(table.tostring(forgeUtils))
-    if forgeUtils ~= nil then
-        api.debug.Trace("Found ForgeUtils")
-        Mod_SceneryTooMuchScalingLuaDatabase.ForgeUtilsEnabled = true
-        forgeUtils.RegisterMod(MOD_INFO.mod_name, MOD_INFO.optional_mods[2].min_version)
-    end
+    --  api.debug.Trace("checking if forgeUtils exists")
+    --  --api.debug.Trace(table.tostring(forgeUtils))
+    --  if forgeUtils ~= nil then
+    --      api.debug.Trace("Found ForgeUtils")
+    --      Mod_SceneryTooMuchScalingLuaDatabase.ForgeUtilsEnabled = true
+    --      forgeUtils.RegisterMod(MOD_INFO.mod_name, MOD_INFO.optional_mods[2].min_version)
+    --  end
 end
 
 Mod_SceneryTooMuchScalingLuaDatabase.Activate = function()
@@ -143,26 +143,26 @@ Mod_SceneryTooMuchScalingLuaDatabase._TMSForgeUtilsShownPopup = false
 Mod_SceneryTooMuchScalingLuaDatabase._Hook_StartScreenPopupHelper = function(tModule)
     tModule.RunCheckLocalModification_TMS = tModule._RunCheckLocalModification
     tModule._RunCheckLocalModification = function(self)
-        if Mod_SceneryTooMuchScalingLuaDatabase._TMSForgeUtilsShownPopup then
-            tModule.RunCheckLocalModification_TMS(self)
-            return
-        end
-
-        api.debug.Trace("attempting to check if config is set")
-        Mod_SceneryTooMuchScalingLuaDatabase._TMSForgeUtilsShownPopup = true
-        ---Now to check if forgeUtils is installed or not
-        if SceneryDBManager.Global.bGridsAreNotGrids then
-            api.debug.Trace("grids are grids is enabled")
-            if not Mod_SceneryTooMuchScalingLuaDatabase.ForgeUtilsEnabled then
-                api.debug.Trace("ForgeUtils not enabled")
-                SceneryDBManager.Global.bGridsAreNotGrids = false
-                local popup = require("Helpers.PopUpDialogUtils")
-                popup.RunOKDialog(
-                    "[STRING_LITERAL:Value=|TooMuchScaling|]",
-                    "[TMSForgeUtilsNotFound]"
-                )
-            end
-        end
+        --if Mod_SceneryTooMuchScalingLuaDatabase._TMSForgeUtilsShownPopup then
+        --    tModule.RunCheckLocalModification_TMS(self)
+        --    return
+        --end
+        --
+        --api.debug.Trace("attempting to check if config is set")
+        --Mod_SceneryTooMuchScalingLuaDatabase._TMSForgeUtilsShownPopup = true
+        -----Now to check if forgeUtils is installed or not
+        --if SceneryDBManager.Global.bGridsAreNotGrids then
+        --    api.debug.Trace("grids are grids is enabled")
+        --    if not Mod_SceneryTooMuchScalingLuaDatabase.ForgeUtilsEnabled then
+        --        api.debug.Trace("ForgeUtils not enabled")
+        --        SceneryDBManager.Global.bGridsAreNotGrids = false
+        --        local popup = require("Helpers.PopUpDialogUtils")
+        --        popup.RunOKDialog(
+        --            "[STRING_LITERAL:Value=|TooMuchScaling|]",
+        --            "[TMSForgeUtilsNotFound]"
+        --        )
+        --    end
+        --end
         tModule.RunCheckLocalModification_TMS(self) -- run base
     end
 end
@@ -172,7 +172,7 @@ Mod_SceneryTooMuchScalingLuaDatabase._HookHUDGamefaceHelper = function(tModule)
     tModule.OnBrowserItemSelected = function(_self, _sSelectedProp, _sType)
         api.debug.Trace("TooMuchScaling.OnBrowserItemSelected")
         if _sType == "modularScenery" then
-            ScalingParkManager:HandleNewSelectedItem(_sSelectedProp)
+            --ScalingParkManager:HandleNewSelectedItem(_sSelectedProp)
         end
 
         tModule.OnBrowserItemSelected_TMS(_self, _sSelectedProp, _sType)
