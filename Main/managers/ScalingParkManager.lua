@@ -78,7 +78,6 @@ function ScalingParkManager:HandleNewSelectedItem(_sSelectedProp)
 
     if ScalingParkManager.OriginalScaleShowing then
         ScalingParkManager.ui:Hide()
-
         ScalingParkManager.OriginalScaleShowing = false
     end
 end
@@ -106,8 +105,8 @@ function ScalingParkManager.Activate(self)
     local _bTriggerDiffernet = _tTmpConfig.bAlwaysScaleTriggeredProps == true and
         ScalingDBManager.Global.bAlwaysScaleTriggeredProps == false
 
-    local _bGridDifferent = _tTmpConfig.bGridsAreNotGrids == true and
-        ScalingDBManager.Global.bGridsAreNotGrids == false
+    --   local _bGridDifferent = _tTmpConfig.bGridsAreNotGrids == true and
+    --       ScalingDBManager.Global.bGridsAreNotGrids == false
 
 
     if _bScaleDifferent or _bGridDifferent or _bTriggerDiffernet then
@@ -121,14 +120,14 @@ function ScalingParkManager.Activate(self)
         if _bScaleDifferent then
             _sLocalScale = "Local Scale: " ..
                 tostring(ScalingDBManager.Global.tScale.min * 100) ..
-                "% -> " .. tostring(ScalingDBManager.Global.tScale.max * 100) .. "%"
+                "% - " .. tostring(ScalingDBManager.Global.tScale.max * 100) .. "%"
             _sParkScale = "Park Scale:" ..
                 tostring(_tTmpConfig.tScale.min * 100) ..
-                "% -> " .. tostring(_tTmpConfig.tScale.max * 100) .. "%"
+                "% - " .. tostring(_tTmpConfig.tScale.max * 100) .. "%"
         end
-        if _bGridDifferent then
-            _sGridEnabled = api.loc.GetLocalisedText("TMSGridNotEnabled")
-        end
+        --       if _bGridDifferent then
+        --           _sGridEnabled = api.loc.GetLocalisedText("TMSGridNotEnabled")
+        --       end
         if _bTriggerDiffernet then
             _sTriggerEnabled = api.loc.GetLocalisedText("TMSTriggerNotEnabled")
         end
