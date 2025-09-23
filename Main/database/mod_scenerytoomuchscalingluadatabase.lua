@@ -17,6 +17,9 @@ local MOD_INFO = {
     author = "Coppertine",
     mod_version = 2.0,
     description = "Expands the range of scalable objects to an extreme degree.",
+    required_mods = {
+
+    },
     optional_mods = {
         { mod = "Mod_ModMenu", min_version = 1.0 },
         --       { mod = "ForgeUtils",  min_version = 1.0 }
@@ -43,6 +46,12 @@ Mod_SceneryTooMuchScalingLuaDatabase.Init = function()
     api.ui2.MapResources("TMSUI")
 
     Mod_SceneryTooMuchScalingLuaDatabase._HookParkLoadSaveManager(require("Managers.ParkLoadSaveManager"))
+    Mod_SceneryTooMuchScalingLuaDatabase._HookGamefaceBrowserSelectUIMode(require(
+        "Editors.Gameface.GamefaceBrowserSelectUIMode"))
+    Mod_SceneryTooMuchScalingLuaDatabase._HookStartScreenHUD(require("StartScreen.Shared.StartScreenHUD"))
+    Mod_SceneryTooMuchScalingLuaDatabase._Hook_StartScreenPopupHelper(require(
+        "StartScreen.Shared.StartScreenPopupHelper"))
+    Mod_SceneryTooMuchScalingLuaDatabase._HookHUDGamefaceHelper(require("Windows.HUDGamefaceHelper"))
 end
 
 Mod_SceneryTooMuchScalingLuaDatabase.Shutdown = function()
@@ -92,7 +101,7 @@ Mod_SceneryTooMuchScalingLuaDatabase._HookParkLoadSaveManager = function(tModule
         api.debug.Trace("TooMuchScaling.SaveBlueprintToSaveToken")
         api.debug.Trace("Metadata:")
         api.debug.Trace(table.tostring(tMetadata))
-        api.debug.Trace(table.tostring(ScalingDBManager.Global))
+        api.debug.Trace(table.tostring(SceneryDBManager.Global))
         return self:_TMSHook_SaveBlueprintToSaveToken(cSaveTokenOrPlayer, tSaveInfo, cBlueprintSaveSelection, tMetadata,
             tScreenshotInfo)
     end
@@ -168,22 +177,31 @@ Mod_SceneryTooMuchScalingLuaDatabase._Hook_StartScreenPopupHelper = function(tMo
 end
 
 Mod_SceneryTooMuchScalingLuaDatabase._HookHUDGamefaceHelper = function(tModule)
-    tModule.OnBrowserItemSelected_TMS = tModule.OnBrowserItemSelected
+    tModule._TMSHook_OnBrowserItemSelected = tModule.OnBrowserItemSelected
     tModule.OnBrowserItemSelected = function(_self, _sSelectedProp, _sType)
         api.debug.Trace("TooMuchScaling.OnBrowserItemSelected")
         if _sType == "modularScenery" then
-            --ScalingParkManager:HandleNewSelectedItem(_sSelectedProp)
+            ScalingParkManager:HandleNewSelectedItem(_sSelectedProp)
         end
 
-        tModule.OnBrowserItemSelected_TMS(_self, _sSelectedProp, _sType)
+        tModule._TMSHook_OnBrowserItemSelected(_self, _sSelectedProp, _sType)
+    end
+end
+
+Mod_SceneryTooMuchScalingLuaDatabase._HookGamefaceBrowserSelectUIMode = function(tModule)
+    tModule._TMSHook_TransitionOut = tModule.TransitionOut
+    tModule.TransitionOut = function(self, _sNextModeName)
+        api.debug.Trace("TooMuchScaling.TransitionOut")
+        ScalingParkManager.CloseOriginalScaleUI()
+        tModule._TMSHook_TransitionOut(self, _sNextModeName)
     end
 end
 
 Mod_SceneryTooMuchScalingLuaDatabase.tLuaHooks = {
-    ["StartScreen.Shared.StartScreenHUD"] = Mod_SceneryTooMuchScalingLuaDatabase._HookStartScreenHUD,
-    ["StartScreen.Shared.StartScreenPopupHelper"] = Mod_SceneryTooMuchScalingLuaDatabase
-        ._Hook_StartScreenPopupHelper,
-    ["Windows.HUDGamefaceHelper"] = Mod_SceneryTooMuchScalingLuaDatabase._HookHUDGamefaceHelper
+    --["StartScreen.Shared.StartScreenHUD"] = Mod_SceneryTooMuchScalingLuaDatabase._HookStartScreenHUD,
+    --["StartScreen.Shared.StartScreenPopupHelper"] = Mod_SceneryTooMuchScalingLuaDatabase
+    --    ._Hook_StartScreenPopupHelper,
+    --["Windows.HUDGamefaceHelper"] = Mod_SceneryTooMuchScalingLuaDatabase._HookHUDGamefaceHelper
 }
 
 
@@ -195,5 +213,4 @@ end
 
 
 function Mod_SceneryTooMuchScalingLuaDatabase.CheckBlueprintScaleValues(_tConfigValues)
-
 end
