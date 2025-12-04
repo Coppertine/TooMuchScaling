@@ -15,22 +15,20 @@ local database = api.database
 local ForgeUtils = tryrequire("forgeutils.builders.scenerypartbuilder")
 
 ---@class ScalingDBManager
-local ScalingDBManager = module(...)
-
+local ScalingDBManager = {}
 
 --- Fallback values
 ScalingDBManager._tConfigDefaults = {
     tScale = {
-        min = 0.1,
+        min = 0.01,
         max = 6
     },
-    bAlwaysScaleTriggeredProps = false,
 }
 
 local dbgTrace = function(_line)
     -- if api.acse.acsedebug then
     local trace = api.debug.TraceNoFlush or api.debug.Trace
-    trace("TooMuchScaling: " .. _line)
+    --    trace("TooMuchScaling: " .. _line)
     -- end
 end
 
@@ -252,9 +250,9 @@ ScalingDBManager.PreBuildPrefabs = function(_fnAdd, _tLuaPrefabNames, _tLuaPrefa
         ScalingDBManager._IgnoreConfigLoad = false
     end
 
-    if ScalingDBManager.Global.bAlwaysScaleTriggeredProps ~= nil and ScalingDBManager.Global.bAlwaysScaleTriggeredProps then
-        GameDatabase.TMSUpdateSceneryPiecePrefabType("TriggerableScenery", "TriggerableScalableScenery")
-    end
+    --    if ScalingDBManager.Global.bAlwaysScaleTriggeredProps ~= nil and ScalingDBManager.Global.bAlwaysScaleTriggeredProps then
+    --        GameDatabase.TMSUpdateSceneryPiecePrefabType("TriggerableScenery", "TriggerableScalableScenery")
+    --    end
 
 
     dbgTrace("checking if scalable objects is empty..")
@@ -395,3 +393,5 @@ ScalingDBManager.OnWorldLoad = function(_tSaver)
         ScalingDBManager._tTmpConfig = _tSaver.tTooMuchScalingConfig
     end
 end
+
+return ScalingDBManager

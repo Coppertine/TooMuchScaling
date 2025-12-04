@@ -2,6 +2,4 @@ One or more scaling values are different to the park's values.
 Would you like to use these values instead?
 {LocalScale}
 {ParkScale}
-{Trigger}
-{Grid}
 Note: Your local values are not changed either way, however saving whilst using the local values overrides said values.
