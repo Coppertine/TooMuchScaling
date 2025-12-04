@@ -1,0 +1,4 @@
+One or more scaling values are different to the Blueprint's values.
+Please reload the park with the blueprint scale to view this blueprint correctly.
+{LocalScale}
+{BlueprintScale}
