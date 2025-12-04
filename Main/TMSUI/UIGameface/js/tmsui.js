@@ -55,7 +55,7 @@ class TMSOverlay extends preact.Component {
 	}
         return (preact.h("div", {className:'TMSUI_root'},
             preact.h("div", { className: 'TMSUI_overlay' },
-                preact.h("span", null, translate(`[TMSOriginalScale:MinScale=|${state.minScale * 100}|:MaxScale=|${state.maxScale * 100}|]`)),
+                preact.h("span", null, translate(`[TMSOriginalScale:MinScale=|${Math.trunc(state.minScale * 100)}|:MaxScale=|${Math.trunc(state.maxScale * 100)}|]`)),
                // preact.h("span", null, translate(`[TMSOriginalScale:MinScale=|1|:MaxScale=|500|]`)),
             )
         ))
